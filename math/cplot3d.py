@@ -22,27 +22,25 @@ def cplot3d(expr, xlim = [-1, 1], ylim = [-1, 1], points = 50, style = "real-ima
     if style == "abs-angle":
         Z = absolute(R)
         T = angle(R)
-        N = (T - T.min())/(T.max() - T.min())  # normaliza
         zlabel = "abs(f(z))"
         keyhue = "arg(f(z))"
     elif style == "real-angle":
         Z = R.real
         T = angle(R)
-        N = (T - T.min())/(T.max() - T.min())  # normaliza
         zlabel = "Re(f(z))"
         keyhue = "arg(f(z))"
     elif style == "angle-real":
         Z = angle(R)
         T = R.real
-        N = (T - T.min())/(T.max() - T.min())  # normaliza
         zlabel = "arg(f(z))"
         keyhue = "Re(f(z))"
     elif style == "real-imag":
         Z = R.real
         T = R.imag
-        N = (T - T.min())/(T.max() - T.min())  # normaliza
         zlabel = "Re(f(z))"
         keyhue = "Im(f(z))"
+    # Normaliza dado que hue toma valores de 0 a 1
+    N = (T - T.min())/(T.max() - T.min())
 
     # Preparamos el plot
     fig = plt.figure()
