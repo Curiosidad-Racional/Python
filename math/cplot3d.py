@@ -16,7 +16,7 @@ Representa expresiones o funciones complejas.
                "" u otros: dos gráficos, el primero para la parte real
                   de la función, el segundo para la parte imaginaria.
 """
-[sqrt(3)/3, sqrt(3)*exp(-4*I*pi/3)/3, sqrt(3)*exp(-8*I*pi/3)/3]])
+
     # Importaciones necesarias
     from mpl_toolkits.mplot3d import Axes3D
     from matplotlib import cm
