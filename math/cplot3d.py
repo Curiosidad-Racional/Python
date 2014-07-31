@@ -1,21 +1,21 @@
 def cplot3d(expr, xlim = [-1, 1], ylim = [-1, 1], points = 50, variables = "real-imag", style = "color"):
-"""
-Representa expresiones o funciones complejas.
-
-   expr      - expresión o función a representar.
-   xlim      - valores máximo y mínimo de la 'x', por defecto [-1, 1].
-   ylim      - valores máximo y mínimo de la 'y', por defecto [-1, 1].
-   points    - puntos usados para representar por cada dimensión: en
-               total points**2 puntos.
-   variables - texto que indica las variables que se representarán,
-                  por defecto "real-imag".
-               Opciones: "mod-arg" "real-arg" "arg-real" "real-imag"
-   style     - texto que indica el tipo de representación:
-               "color": un sólo gráfico en el que la segunda variable
-                  es el color.
-               "" u otros: dos gráficos, el primero para la parte real
-                  de la función, el segundo para la parte imaginaria.
-"""
+    """
+    Representa expresiones o funciones complejas.
+    
+       expr      - expresión o función a representar.
+       xlim      - valores máximo y mínimo de la 'x', por defecto [-1, 1].
+       ylim      - valores máximo y mínimo de la 'y', por defecto [-1, 1].
+       points    - puntos usados para representar por cada dimensión: en
+                   total points**2 puntos.
+       variables - texto que indica las variables que se representarán,
+                      por defecto "real-imag".
+                   Opciones: "mod-arg" "real-arg" "arg-real" "real-imag"
+       style     - texto que indica el tipo de representación:
+                   "color": un sólo gráfico en el que la segunda variable
+                      es el color.
+                   "" u otros: dos gráficos, el primero para la parte real
+                      de la función, el segundo para la parte imaginaria.
+    """
 
     # Importaciones necesarias
     from mpl_toolkits.mplot3d import Axes3D
