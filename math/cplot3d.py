@@ -1,6 +1,6 @@
 def cplot3d(expr, xlim = [-1, 1], ylim = [-1, 1], points = 50, variables = "real-imag", style = "color"):
     """
-    Representa expresiones o funciones complejas.
+    Plot complex expressions or functions.
     
        expr      - expresión o función a representar.
        xlim      - valores máximo y mínimo de la 'x', por defecto [-1, 1].
