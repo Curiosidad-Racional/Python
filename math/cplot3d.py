@@ -2,7 +2,7 @@ def cplot3d(expr, xlim = [-1, 1], ylim = [-1, 1], points = 50, variables = "real
     """
     Plot complex expressions or functions.
     
-       expr      - expresión o función a representar.
+       expr      - expression or function to plot.
        xlim      - valores máximo y mínimo de la 'x', por defecto [-1, 1].
        ylim      - valores máximo y mínimo de la 'y', por defecto [-1, 1].
        points    - puntos usados para representar por cada dimensión: en
