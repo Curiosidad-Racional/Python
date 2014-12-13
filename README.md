@@ -1,12 +1,8 @@
 
-├── math
-
+├── math&#13;
 │   └── cplot3d.py            - plot complex functions
-
 ├── physics
-
 │   └── lagrangian.py         - lagrangian mechanics functions
-
 └── README.md
 
 
