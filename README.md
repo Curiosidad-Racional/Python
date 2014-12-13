@@ -5,6 +5,7 @@
 │   └── lagrangian.py         - lagrangian mechanics functions
 └── README.md
 
+```
 .
 +-- _config.yml
 +-- _drafts
@@ -23,6 +24,6 @@
 |   +-- members.yml
 +-- _site
 +-- index.html
-
+```
 
 Help and examples inside source code files.
