@@ -1,72 +1,66 @@
-def cplot3d(expr, xlim = [-1, 1], ylim = [-1, 1], points = 50, variables = "real-imag", style = "color"):
+def cplot3d(expr, xlim = [-1, 1], ylim = [-1, 1], points = 50, type = "real-imag", style = "color"):
     """
     Plot complex expressions or functions.
     
        expr      - expression or function to plot.
        xlim      - max and min 'x' values, default [-1, 1].
        ylim      - max and min 'y' values, default [-1, 1].
-       points    - puntos usados para representar por cada dimensión: en
-                   total points**2 puntos.
-       variables - texto que indica las variables que se representarán,
-                      por defecto "real-imag".
-                   Opciones: "mod-arg" "real-arg" "arg-real" "real-imag"
-       style     - texto que indica el tipo de representación:
-                   "color": un sólo gráfico en el que la segunda variable
-                      es el color.
-                   "" u otros: dos gráficos, el primero para la parte real
-                      de la función, el segundo para la parte imaginaria.
+       points    - axis points. Total points**2.
+       type      - type of plot, default "real-imag".
+                   Opctions: "mod-arg" "real-arg" "arg-real" "real-imag"
+       style     - "color": color plot.
+                   others: double plot.
     """
 
-    # Importaciones necesarias
+    # Dependences
     from mpl_toolkits.mplot3d import Axes3D
     from matplotlib import cm
     import matplotlib.pyplot as plt
     from numpy import arange, array, meshgrid, size, absolute, angle
     from sympy import lambdify, Symbol
     
-    # Para poder representar tanto funciones como expresiones
-    # transformamos las expresiones en funciones.
+    # Expressions to functions
     if hasattr(expr, 'atoms'):
         var = list(expr.atoms(Symbol))[0]
         Fz=lambdify(var, expr, 'numpy')
     else:
         Fz=expr
 
-    # Obtenemos los valores de X, Y, Z
+    # Obtain X(real), Y(real), Z(imaginary)
     X = arange(xlim[0], xlim[1], (xlim[1]-xlim[0])/(points-1))
     Y = arange(ylim[0], ylim[1], (ylim[1]-ylim[0])/(points-1))
     X, Y = meshgrid(X, Y)
     R=Fz(X + 1j*Y)
 
-    # Elegimos variables a representar
-    if variables == "mod-arg":
+    # Select type
+    if type == "mod-arg":
         Z = absolute(R)
         T = angle(R)
         zlabel = "abs(f(z))"
         keyhue = "arg(f(z))"
-    elif variables == "real-arg":
+    elif type == "real-arg":
         Z = R.real
         T = angle(R)
         zlabel = "Re(f(z))"
         keyhue = "arg(f(z))"
-    elif variables == "arg-real":
+    elif type == "arg-real":
         Z = angle(R)
         T = R.real
         zlabel = "arg(f(z))"
         keyhue = "Re(f(z))"
-    elif variables == "real-imag":
+    elif type == "real-imag":
         Z = R.real
         T = R.imag
         zlabel = "Re(f(z))"
         keyhue = "Im(f(z))"
 
 
-    # Elegimos el tipo de representación
+    # Select style
     if style == "color":
-        # Normaliza dado que hue toma valores de 0 a 1
+        #  Normalize. hue in [0, 1]
         N = (T - T.min())/(T.max() - T.min())
 
-        # Preparamos el plot
+        # Setup the plot
         fig = plt.figure()
         ax = fig.gca(projection='3d')
         plt.title('$\mathrm{f(z)}$')
@@ -78,13 +72,13 @@ def cplot3d(expr, xlim = [-1, 1], ylim = [-1, 1], points = 50, variables = "real
             facecolors=cm.jet(N),
             linewidth=0, antialiased=True, shade=False)
 
-        # Mostramos la leyenda
+        # Show the leyend
         m = cm.ScalarMappable(cmap=cm.jet, norm=surf.norm)
         m.set_array(T)
         p=plt.colorbar(m)
         p.set_label('$\mathrm{'+keyhue+'}$')
     else:
-        # Preparamos el primer plot
+        # Setup first plot
         fig = plt.figure(figsize=plt.figaspect(0.5))
         plt.axis('off')
         plt.title('$\mathrm{f(z)}$')
@@ -96,7 +90,7 @@ def cplot3d(expr, xlim = [-1, 1], ylim = [-1, 1], points = 50, variables = "real
             X, Y, Z, rstride=1, cstride=1,
             cmap=cm.jet,
             linewidth=0, antialiased=False, shade=False)
-        # Preparamos el segundo plot
+        # Setup second plot
         ax = fig.add_subplot(1, 2, 2, projection='3d')
         ax.set_xlabel('$\mathrm{Re(z)}$')
         ax.set_ylabel('$\mathrm{Im(z)}$')
