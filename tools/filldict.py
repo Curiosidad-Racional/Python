@@ -116,56 +116,33 @@ class cells:
 
 
 def expand(template):
-    if all(map(lambda x: not isinstance(x, cells), template)):
-        return template
     if isinstance(template, dict):
-        result = {}
         for k, v in template.items():
             if isinstance(k, cells):
                 for item in k:
-                    result[item] = item.set(v)
+                    yield item, item.set(v)
             else:
-                result[k] = v
-        return result
-    if isinstance(template, set):
-        result = set()
+                yield k, v
+    elif isinstance(template, Iterable):
         for v in template:
             if isinstance(v, cells):
                 for item in v:
-                    result.add(item)
+                    yield item
             else:
-                result.add(v)
-        return result
-    if isinstance(template, list):
-        result = set()
-        for v in template:
-            if isinstance(v, cells):
-                for item in v:
-                    result.append(item)
-            else:
-                result.append(v)
-        return result
-    if isinstance(template, tuple):
-        result = set()
-        for v in template:
-            if isinstance(v, cells):
-                for item in v:
-                    result += (item,)
-            else:
-                result += (v,)
-        return result
-    return template
+                yield v
 
 
 def fill(template):
     if isinstance(template, cell):
         return template.value()
     if isinstance(template, dict):
-        return { fill(k): fill(v) for k, v in expand(template).items() }
+        return { fill(k): fill(v) for k, v in expand(template) }
     if isinstance(template, set):
         return { fill(v) for v in expand(template) }
     if isinstance(template, list):
         return [ fill(v) for v in expand(template) ]
     if isinstance(template, tuple):
         return tuple( fill(v) for v in expand(template) )
+    if isinstance(template, Iterable):
+        return ( fill(v) for v in expand(template) )
     return template
