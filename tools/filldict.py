@@ -1,4 +1,5 @@
 from collections import Iterable
+from itertools import product
 
 
 class iter_inf:
@@ -22,22 +23,25 @@ class iter_ell:
                 continue
             if ellipsis:
                 ellipsis = False
-                beg_col, beg_row = cell.coord(last)
-                end_col, end_row = cell.coord(item)
-                col_inc = 1 if beg_col < end_col else -1
-                row_inc = 1 if beg_row < end_row else -1
-                for x in range(beg_col, end_col + col_inc, col_inc):
-                    for y in range(beg_row, end_row + row_inc, row_inc):
-                        yield x, y
+                beg = cell.coord(last)
+                end = cell.coord(item)
+                inc = [ 1 if b <= e else -1 for b, e in zip(beg, end) ]
+                points = []
+                for b, e, i in zip(beg, end, inc):
+                    points.append([])
+                    for var in range(b, e + i, i):
+                        points[-1].append(var)
+                for comb in product(*points):
+                    yield comb
             else:
                 yield item
             last = item
 
 
 class cell:
-    def __init__(self, point, get, rel=False, func=lambda x: x, cond=None):
+    def __init__(self, point, get=None, rel=False, func=lambda x: x, cond=None):
         if isinstance(point, (str, tuple)):
-            self.col, self.row = self.coord(point)
+            self.point = self.coord(point)
             self.get = get
             self.rel = rel
             self.func = func
@@ -63,19 +67,30 @@ class cell:
         if self.unique:
             yield self
         elif self.cond:
+            first_point = None
             for point, get, rel, func in zip(self.points,
                                              self.gets,
                                              self.rels,
                                              self.funcs):
-                col, row = self.coord(point)
-                if self.cond(get(col, row)):
-                    yield cell((col, row), get, rel=rel, func=func)
+                point = self.coord(point)
+                if not first_point:
+                    first_point = point
+                if self.cond(get(*point)):
+                    c = cell(point, get, rel=rel, func=func)
+                    c.first_point = first_point
+                    yield c
         else:
+            first_point = None
             for point, get, rel, func in zip(self.points,
                                              self.gets,
                                              self.rels,
                                              self.funcs):
-                yield cell(self.coord(point), get, rel=rel, func=func)
+                point = self.coord(point)
+                if not first_point:
+                    first_point = point
+                c = cell(point, get, rel=rel, func=func)
+                c.first_point = first_point
+                yield c
 
     @staticmethod
     def coord(point):
@@ -94,28 +109,31 @@ class cell:
 
     def value(self):
         try:
-            return self.func(self.get(
-                self.col, self.row))
+            return self.func(self.get(*self.point))
         except IndexError:
             return None
 
-    def set(self, template):
-        if isinstance(template, cell):
-            if template.rel:
-                return cell((template.col + self.col, template.row + self.row),
-                            self.get, rel=template.rel,
-                            func=template.func)
+    def set(self, t):
+        if isinstance(t, cell):
+            if t.rel or self.rel:
+                return cell(tuple(
+                    t.point[i] + self.point[i] - self.first_point[i]
+                    for i in range(len(t.point))),
+                            self.get, rel=t.rel,
+                            func=t.func)
             else:
-                return template
-        if isinstance(template, dict):
-            return { self.set(k): self.set(v) for k, v in expand(template) }
-        if isinstance(template, set):
-            return { self.set(v) for v in expand(template) }
-        if isinstance(template, list):
-            return [ self.set(v) for v in expand(template) ]
-        if isinstance(template, Iterable):
-            return tuple( self.set(v) for v in expand(template) )
-        return template
+                if not t.get:
+                    t.get = self.get
+                return t
+        if isinstance(t, dict):
+            return { self.set(k): self.set(v) for k, v in expand(t) }
+        if isinstance(t, set):
+            return { self.set(v) for v in expand(t) }
+        if isinstance(t, list):
+            return [ self.set(v) for v in expand(t) ]
+        if isinstance(t, tuple):
+            return tuple( self.set(v) for v in expand(t) )
+        return t
 
 
 def expand(template):
@@ -144,6 +162,7 @@ def fill(template):
         return { fill(v) for v in expand(template) }
     if isinstance(template, list):
         return [ fill(v) for v in expand(template) ]
-    if isinstance(template, Iterable):
+    if isinstance(template, tuple):
+        print(template)
         return tuple( fill(v) for v in expand(template) )
     return template
