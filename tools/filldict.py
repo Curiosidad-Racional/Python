@@ -41,8 +41,11 @@ class iter_ell:
 class cell:
     def __init__(self, point, get=None, rel=False, func=lambda x: x, cond=None):
         if isinstance(point, (str, tuple)):
-            self.point = self.coord(point)
-            self.get = get
+            self.point = cell.coord(point)
+            if get:
+                self.get = get
+            else:
+                self.get = cell.get
             self.rel = rel
             self.func = func
             self.unique = True
@@ -72,7 +75,7 @@ class cell:
                                              self.gets,
                                              self.rels,
                                              self.funcs):
-                point = self.coord(point)
+                point = cell.coord(point)
                 if not first_point:
                     first_point = point
                 if self.cond(get(*point)):
@@ -85,7 +88,7 @@ class cell:
                                              self.gets,
                                              self.rels,
                                              self.funcs):
-                point = self.coord(point)
+                point = cell.coord(point)
                 if not first_point:
                     first_point = point
                 c = cell(point, get, rel=rel, func=func)
@@ -106,6 +109,10 @@ class cell:
                 factor *= 26
             return col, row
         return point
+
+    @staticmethod
+    def get(*args, **kwargs):
+        return None
 
     def value(self):
         try:
