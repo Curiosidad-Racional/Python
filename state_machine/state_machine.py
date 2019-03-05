@@ -43,13 +43,19 @@ class Event:
 
 
 class Exit(Event):
-    def __init__(self, event):
+    def __init__(self, event=None):
         self.event = event
 
 
 class Start(Event):
-    def __init__(self, event):
+    def __init__(self, event=None):
         self.event = event
+
+
+class Args(Event):
+    def __init__(self, *args, **kwargs):
+        self.args = args
+        self.kwargs = kwargs
 
 
 class Subject:
@@ -62,14 +68,6 @@ class Subject:
     def notify_all(self, event):
         for observer in self._observers:
             observer.notify(event)
-
-
-class Observer:
-    def notify(self, event):
-        raise NotImplementedError()
-
-    def fetch(self):
-        raise NotImplementedError()
 
 
 class State(Subject):
@@ -85,23 +83,24 @@ class StopMachine(Exception):
         self.event = event
 
 
-class Machine(State, Observer):  # Prepared to be State
+class Machine(State):  # Prepared to be State
     def __init__(self, states=None, transitions=None, notifiers=None):
         super().__init__()
+        self._type = type(self)
         self._state = None
         self._states = {}
         for state in states or self.states:
             self._states[type(state)] = state
             state.register(self)
         if transitions:
-            self.transitions = transitions
+            self.transitions = transitions[self._type]
+            del transitions[self._type]
             for state, transitions in transitions.items():
                 self._states[state].transitions = transitions
         elif not hasattr(self, "transitions"):
             self.transitions = {}
         if notifiers:
             self.notifiers = notifiers
-        self._type = type(self)
 
     def _enter_(self, event, from_state):
         # [ <first>
@@ -160,6 +159,8 @@ class Machine(State, Observer):  # Prepared to be State
                 try:
                     # Get next event
                     event = self.fetch()
+                    if event is None:
+                        continue
                     event_type = type(event)
                     # If event in Machine's transitions cannot handle it.
                     # Exit controlled calling to current state function
@@ -257,6 +258,7 @@ class Machine(State, Observer):  # Prepared to be State
     def start(self, event=None, from_state=None):
         # <PRINT machine start>
         self._enter_(event, from_state)
+        return self
 
     def notify(self, event):
         try:
@@ -264,12 +266,21 @@ class Machine(State, Observer):  # Prepared to be State
         except KeyError as e:
             e.args = (str(e.args[0]) + "   Missing: " + type(event).__name__
                       + " in: " + type(self).__name__
-                      + " notifiers: " + graph_format(self.notifiers))
+                      + " notifiers: " + graph_format(self.notifiers),)
             raise
         if isinstance(notifier, tuple):
-            self.__dict__[notifier[0]] = event.__dict__[notifier[1]]
+            key, value_or_ref = notifier
+            if value_or_ref in event.__dict__:
+                self.__dict__[key] = event.__dict__[value_or_ref]
+            elif value_or_ref == "":
+                self.__dict__[key] = event
+            else:
+                self.__dict__[key] = value_or_ref
         else:
             return notifier(event)
+
+    def fetch(self):
+        raise NotImplementedError()
 
 
 if __name__ == "__main__":
@@ -290,7 +301,7 @@ if __name__ == "__main__":
     queue = Queue()
 
 
-    class QueueObserver(Observer):
+    class QueueObserver:
         def notify(self, event):
             queue.put(event)
 
@@ -352,3 +363,59 @@ if __name__ == "__main__":
 
 
     Starter([Startup(), AbortCondition(), Mutex([LaunchCondition(), Launch()])]).start()
+
+    print("############################################################")
+
+
+    class Startup(State):
+        def _enter_(self, event, state):
+            self.notify_all(Next())
+
+
+    class AbortCondition(State):
+        def __init__(self):
+            super().__init__()
+            self.first = True
+
+        def _enter_(self, event, state):
+            if self.first:
+                self.first = False
+                self.notify_all(No())
+            else:
+                self.notify_all(Yes())
+
+
+    class Mutex(QueueObserver, Machine):
+        pass
+
+
+    class LaunchCondition(State):
+        def _enter_(self, event, state):
+            self.notify_all(Next())
+
+
+    class Launch(State):
+        def _enter_(self, event, state):
+            self.notify_all(Next())
+
+
+    class Starter(QueueObserver, Machine):
+        pass
+
+
+    Starter(
+        [Startup(),
+         AbortCondition(),
+         Mutex([LaunchCondition(), Launch()],
+               {
+                   Mutex: {Start: LaunchCondition},
+                   LaunchCondition: {Next: Launch},
+                   Launch: {Next: Mutex},
+               })],
+        {
+            Startup: {Next: AbortCondition},
+            AbortCondition: {No: Mutex, Yes: Starter},
+            Mutex: {Start: LaunchCondition, Exit: AbortCondition},
+            Starter: {Start: Startup}
+        }
+    ).start()
